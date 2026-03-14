@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zenith — Counsellor Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%;font-family:'Inter',sans-serif;background:#0B1F4A;color:#fff}
+.page{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+.logo-mark{width:40px;height:40px;background:#1A56DB;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff;flex-shrink:0}
+.logo-name{font-size:15px;font-weight:600;color:#fff;line-height:1}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;margin-top:3px}
+.card{width:100%;max-width:400px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px 28px}
+.card-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px;text-align:center}
+.card-sub{font-size:14px;color:rgba(255,255,255,0.45);text-align:center;margin-bottom:28px;line-height:1.6}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);margin-bottom:7px;letter-spacing:0.5px}
+.form-group input{width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:13px 16px;color:#fff;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:.2s}
+.form-group input:focus{border-color:#1A56DB}
+.form-group input::placeholder{color:rgba(255,255,255,0.25)}
+.btn{width:100%;padding:15px;background:#1A56DB;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px;transition:.2s}
+.btn:active{background:#1341B0;transform:scale(0.98)}
+.error{font-size:12.5px;color:#F87171;margin-top:10px;text-align:center;display:none}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="logo">
+    <div class="logo-mark">Z</div>
+    <div>
+      <div class="logo-name">Zenith Foundation</div>
+      <div class="logo-sub">COUNSELLOR PORTAL</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Welcome back</div>
+    <div class="card-sub">Sign in to your counsellor account to view and answer questions.</div>
+    <div class="form-group">
+      <label>EMAIL</label>
+      <input type="email" id="email" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label>PASSWORD</label>
+      <input type="password" id="password" placeholder="••••••••">
+    </div>
+    <div class="error" id="error">Invalid email or password. Please try again.</div>
+    <button class="btn" onclick="login()">Sign In</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xlejfualegfxeohgesly.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsZWpmdWFsZWdmeGVvaGdlc2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTc2MzIsImV4cCI6MjA4ODk5MzYzMn0.oquOKebx1wF1J70-O2mFsn0gmjfqDAWsy0x4eYemIU0';
+
+async function login() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const err = document.getElementById('error');
+  err.style.display = 'none';
+
+  if (!email || !password) { err.textContent = 'Please enter email and password.'; err.style.display = 'block'; return; }
+
+  const btn = document.querySelector('.btn');
+  btn.textContent = 'Signing in...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (data.access_token) {
+      localStorage.setItem('zenith_counsellor_token', data.access_token);
+      localStorage.setItem('zenith_counsellor_email', email);
+      localStorage.setItem('zenith_counsellor_id', data.user?.id || '');
+      window.location.href = 'dashboard.html';
+    } else {
+      err.textContent = data.error_description || 'Invalid email or password.';
+      err.style.display = 'block';
+      btn.textContent = 'Sign In';
+      btn.disabled = false;
+    }
+  } catch (e) {
+    err.textContent = 'Connection error. Please try again.';
+    err.style.display = 'block';
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+
+// redirect if already logged in
+if (localStorage.getItem('zenith_counsellor_token')) {
+  window.location.href = 'dashboard.html';
+}
+</script>
+</body>
+</html>
